@@ -1,293 +1,250 @@
 
---==================================================
--- WIDHA GROWBLOX V2
+--========================================
+-- WIDHA GROWBLOX V3
+-- SUGAR CANE EDITION
 -- Created by Widha Gaming
--- Modern Dark Blue GUI
---==================================================
+-- GUI CONTROL PANEL
+--========================================
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
-local Player = Players.LocalPlayer
-
--- Remove old GUI
-pcall(function()
-    local parent = CoreGui
-    if gethui then
-        parent = gethui()
-    end
-    local old = parent:FindFirstChild("WidhaGrowBloxV2")
-    if old then old:Destroy() end
-end)
-
-local GUI = Instance.new("ScreenGui")
-GUI.Name = "WidhaGrowBloxV2"
-GUI.ResetOnSpawn = false
-GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
 local parent = CoreGui
 pcall(function()
     if gethui then parent = gethui() end
 end)
+
+pcall(function()
+    local old = parent:FindFirstChild("WidhaGrowBloxV3")
+    if old then old:Destroy() end
+end)
+
+local GUI = Instance.new("ScreenGui")
+GUI.Name = "WidhaGrowBloxV3"
+GUI.ResetOnSpawn = false
 GUI.Parent = parent
 
-local Blue = Color3.fromRGB(0, 115, 255)
-local Dark = Color3.fromRGB(12, 19, 37)
-local Panel = Color3.fromRGB(21, 31, 54)
-local White = Color3.fromRGB(240, 245, 255)
-local Green = Color3.fromRGB(25, 190, 110)
-local Gray = Color3.fromRGB(65, 75, 95)
+local BLUE = Color3.fromRGB(0,130,255)
+local DARK = Color3.fromRGB(10,18,35)
+local PANEL = Color3.fromRGB(22,34,57)
+local GREEN = Color3.fromRGB(25,200,110)
+local GRAY = Color3.fromRGB(65,75,95)
+local WHITE = Color3.fromRGB(245,250,255)
 
-local enabled = {
-    ["Auto Break"] = false,
-    ["Auto Plant"] = false,
-    ["Auto Harvest"] = false,
-    ["Auto Clear"] = false
+local features = {
+    "Auto Plant",
+    "Auto Harvest",
+    "Auto Break",
+    "Auto Clear"
 }
 
-local speed = 1
-local elapsed = 0
+local enabled = {}
+for _,name in ipairs(features) do
+    enabled[name] = false
+end
 
--- Main Window
+local speed = 1
+
 local Main = Instance.new("Frame")
-Main.Size = UDim2.fromOffset(340, 430)
-Main.Position = UDim2.new(0.5, -170, 0.5, -215)
-Main.BackgroundColor3 = Dark
+Main.Size = UDim2.fromOffset(340,440)
+Main.Position = UDim2.new(.5,-170,.5,-220)
+Main.BackgroundColor3 = DARK
 Main.BorderSizePixel = 0
 Main.Parent = GUI
 
-Instance.new("UICorner", Main).CornerRadius =
-    UDim.new(0, 14)
+Instance.new("UICorner",Main).CornerRadius =
+    UDim.new(0,14)
 
-local Stroke = Instance.new("UIStroke")
-Stroke.Color = Blue
-Stroke.Thickness = 2
-Stroke.Parent = Main
+local stroke = Instance.new("UIStroke",Main)
+stroke.Color = BLUE
+stroke.Thickness = 2
 
--- Title
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -50, 0, 48)
-Title.Position = UDim2.fromOffset(12, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "👑 WIDHA GROWBLOX V2"
-Title.TextColor3 = White
-Title.TextSize = 19
-Title.Font = Enum.Font.GothamBold
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Main
+local function label(parent,text,size,pos,font,color)
+    local obj = Instance.new("TextLabel")
+    obj.BackgroundTransparency = 1
+    obj.Text = text
+    obj.TextSize = size
+    obj.Position = pos
+    obj.Size = UDim2.new(1,-20,0,30)
+    obj.Font = font or Enum.Font.GothamBold
+    obj.TextColor3 = color or WHITE
+    obj.TextXAlignment = Enum.TextXAlignment.Left
+    obj.Parent = parent
+    return obj
+end
 
-local Close = Instance.new("TextButton")
-Close.Size = UDim2.fromOffset(35, 35)
-Close.Position = UDim2.new(1, -42, 0, 7)
-Close.BackgroundColor3 = Color3.fromRGB(170, 45, 55)
-Close.Text = "×"
-Close.TextColor3 = White
-Close.TextSize = 24
-Close.Font = Enum.Font.GothamBold
-Close.Parent = Main
-Instance.new("UICorner", Close).CornerRadius =
-    UDim.new(0, 8)
+label(Main,"👑 WIDHA GROWBLOX V3",19,
+    UDim2.fromOffset(12,8))
 
--- Subtitle
-local Subtitle = Instance.new("TextLabel")
-Subtitle.Size = UDim2.new(1, -20, 0, 25)
-Subtitle.Position = UDim2.fromOffset(10, 48)
-Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "AUTO FARM CONTROL PANEL"
-Subtitle.TextColor3 = Color3.fromRGB(100, 175, 255)
-Subtitle.Font = Enum.Font.GothamBold
-Subtitle.TextSize = 12
-Subtitle.Parent = Main
+label(Main,"SUGAR CANE AUTO FARM PANEL",11,
+    UDim2.fromOffset(12,38),nil,BLUE)
 
--- Status
 local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, -24, 0, 34)
-Status.Position = UDim2.fromOffset(12, 78)
-Status.BackgroundColor3 = Panel
+Status.Size = UDim2.new(1,-24,0,32)
+Status.Position = UDim2.fromOffset(12,72)
+Status.BackgroundColor3 = PANEL
 Status.Text = "● GUI READY"
-Status.TextColor3 = Green
+Status.TextColor3 = GREEN
 Status.Font = Enum.Font.GothamBold
 Status.TextSize = 13
 Status.Parent = Main
-Instance.new("UICorner", Status).CornerRadius =
-    UDim.new(0, 8)
 
--- Feature buttons
-local function makeButton(name, y)
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, -24, 0, 43)
-    Button.Position = UDim2.fromOffset(12, y)
-    Button.BackgroundColor3 = Panel
-    Button.Text = ""
-    Button.Parent = Main
+Instance.new("UICorner",Status).CornerRadius =
+    UDim.new(0,8)
 
-    Instance.new("UICorner", Button).CornerRadius =
-        UDim.new(0, 9)
+local controls = {}
 
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.65, 0, 1, 0)
-    Label.Position = UDim2.fromOffset(12, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = name
-    Label.TextColor3 = White
-    Label.Font = Enum.Font.GothamBold
-    Label.TextSize = 14
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = Button
+local function updateStatus()
+    local count = 0
+    for _,v in pairs(enabled) do
+        if v then count += 1 end
+    end
 
-    local Toggle = Instance.new("TextLabel")
-    Toggle.Size = UDim2.fromOffset(65, 27)
-    Toggle.Position = UDim2.new(1, -76, 0.5, -13)
-    Toggle.BackgroundColor3 = Gray
-    Toggle.Text = "OFF"
-    Toggle.TextColor3 = White
-    Toggle.Font = Enum.Font.GothamBold
-    Toggle.TextSize = 12
-    Toggle.Parent = Button
+    Status.Text = "● "..count.."/4 CONTROLS ENABLED"
+end
 
-    Instance.new("UICorner", Toggle).CornerRadius =
-        UDim.new(1, 0)
+local function makeToggle(name,y)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1,-24,0,45)
+    button.Position = UDim2.fromOffset(12,y)
+    button.BackgroundColor3 = PANEL
+    button.Text = ""
+    button.Parent = Main
 
-    Button.MouseButton1Click:Connect(function()
+    Instance.new("UICorner",button).CornerRadius =
+        UDim.new(0,9)
+
+    local txt = label(button,name,14,
+        UDim2.fromOffset(12,7))
+
+    txt.Size = UDim2.new(.65,0,0,30)
+
+    local toggle = Instance.new("TextLabel")
+    toggle.Size = UDim2.fromOffset(58,27)
+    toggle.Position = UDim2.new(1,-70,.5,-13)
+    toggle.BackgroundColor3 = GRAY
+    toggle.Text = "OFF"
+    toggle.TextColor3 = WHITE
+    toggle.TextSize = 12
+    toggle.Font = Enum.Font.GothamBold
+    toggle.Parent = button
+
+    Instance.new("UICorner",toggle).CornerRadius =
+        UDim.new(1,0)
+
+    local function refresh()
+        toggle.Text = enabled[name] and "ON" or "OFF"
+        toggle.BackgroundColor3 =
+            enabled[name] and GREEN or GRAY
+    end
+
+    button.MouseButton1Click:Connect(function()
         enabled[name] = not enabled[name]
-
-        Toggle.Text = enabled[name] and "ON" or "OFF"
-        Toggle.BackgroundColor3 =
-            enabled[name] and Green or Gray
-
-        Status.Text = "● " .. name ..
-            (enabled[name] and " ENABLED" or " DISABLED")
-        Status.TextColor3 =
-            enabled[name] and Green or White
+        refresh()
+        updateStatus()
     end)
 
-    return Button
+    controls[name] = refresh
 end
 
-makeButton("Auto Break", 125)
-makeButton("Auto Plant", 174)
-makeButton("Auto Harvest", 223)
-makeButton("Auto Clear", 272)
-
--- Speed controls
-local SpeedPanel = Instance.new("Frame")
-SpeedPanel.Size = UDim2.new(1, -24, 0, 42)
-SpeedPanel.Position = UDim2.fromOffset(12, 323)
-SpeedPanel.BackgroundColor3 = Panel
-SpeedPanel.Parent = Main
-Instance.new("UICorner", SpeedPanel).CornerRadius =
-    UDim.new(0, 8)
-
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(0.5, 0, 1, 0)
-SpeedLabel.Position = UDim2.fromOffset(10, 0)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Text = "Speed: x1.0"
-SpeedLabel.TextColor3 = White
-SpeedLabel.TextSize = 13
-SpeedLabel.Font = Enum.Font.GothamBold
-SpeedLabel.Parent = SpeedPanel
-
-local Minus = Instance.new("TextButton")
-Minus.Size = UDim2.fromOffset(32, 28)
-Minus.Position = UDim2.new(1, -76, 0.5, -14)
-Minus.Text = "-"
-Minus.Parent = SpeedPanel
-Minus.BackgroundColor3 = Gray
-Minus.TextColor3 = White
-Minus.TextSize = 20
-Instance.new("UICorner", Minus).CornerRadius =
-    UDim.new(0, 6)
-
-local Plus = Instance.new("TextButton")
-Plus.Size = UDim2.fromOffset(32, 28)
-Plus.Position = UDim2.new(1, -38, 0.5, -14)
-Plus.Text = "+"
-Plus.Parent = SpeedPanel
-Plus.BackgroundColor3 = Blue
-Plus.TextColor3 = White
-Plus.TextSize = 20
-Instance.new("UICorner", Plus).CornerRadius =
-    UDim.new(0, 6)
-
-local function updateSpeed()
-    SpeedLabel.Text = "Speed: x" ..
-        string.format("%.1f", speed)
+for i,name in ipairs(features) do
+    makeToggle(name,115+(i-1)*50)
 end
 
-Minus.MouseButton1Click:Connect(function()
-    speed = math.max(0.5, speed - 0.5)
-    updateSpeed()
+-- Speed control
+local speedPanel = Instance.new("Frame")
+speedPanel.Size = UDim2.new(1,-24,0,42)
+speedPanel.Position = UDim2.fromOffset(12,320)
+speedPanel.BackgroundColor3 = PANEL
+speedPanel.Parent = Main
+
+Instance.new("UICorner",speedPanel).CornerRadius =
+    UDim.new(0,8)
+
+local speedLabel = label(speedPanel,"Speed: x1.0",13,
+    UDim2.fromOffset(10,6))
+
+local function speedButton(symbol,x,callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.fromOffset(35,28)
+    b.Position = UDim2.new(1,x,0.5,-14)
+    b.BackgroundColor3 = BLUE
+    b.Text = symbol
+    b.TextColor3 = WHITE
+    b.TextSize = 18
+    b.Parent = speedPanel
+    Instance.new("UICorner",b).CornerRadius =
+        UDim.new(0,6)
+    b.MouseButton1Click:Connect(callback)
+end
+
+speedButton("-", -80,function()
+    speed = math.max(.5,speed-.5)
+    speedLabel.Text = "Speed: x"..speed
 end)
 
-Plus.MouseButton1Click:Connect(function()
-    speed = math.min(5, speed + 0.5)
-    updateSpeed()
+speedButton("+", -40,function()
+    speed = math.min(5,speed+.5)
+    speedLabel.Text = "Speed: x"..speed
 end)
 
 -- Start All
-local Start = Instance.new("TextButton")
-Start.Size = UDim2.new(0.46, 0, 0, 36)
-Start.Position = UDim2.fromOffset(12, 374)
-Start.BackgroundColor3 = Green
-Start.Text = "START ALL"
-Start.TextColor3 = White
-Start.Font = Enum.Font.GothamBold
-Start.TextSize = 13
-Start.Parent = Main
-Instance.new("UICorner", Start).CornerRadius =
-    UDim.new(0, 8)
+local function actionButton(text,x,color,callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(.46,0,0,38)
+    b.Position = UDim2.new(x,0,0,370)
+    b.BackgroundColor3 = color
+    b.Text = text
+    b.TextColor3 = WHITE
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 12
+    b.Parent = Main
 
-Start.MouseButton1Click:Connect(function()
-    for name in pairs(enabled) do
+    Instance.new("UICorner",b).CornerRadius =
+        UDim.new(0,8)
+
+    b.MouseButton1Click:Connect(callback)
+end
+
+actionButton("START ALL",.04,GREEN,function()
+    for _,name in ipairs(features) do
         enabled[name] = true
-        for _, obj in ipairs(Main:GetDescendants()) do
-            if obj:IsA("TextButton") and obj.Text == name then
-                -- Reserved for future controls
-            end
-        end
+        controls[name]()
     end
-    Status.Text = "● ALL CONTROLS ENABLED"
-    Status.TextColor3 = Green
+    updateStatus()
 end)
 
--- Stop All
-local Stop = Instance.new("TextButton")
-Stop.Size = UDim2.new(0.46, 0, 0, 36)
-Stop.Position = UDim2.new(0.52, 0, 0, 374)
-Stop.BackgroundColor3 = Color3.fromRGB(175, 50, 60)
-Stop.Text = "STOP ALL"
-Stop.TextColor3 = White
-Stop.Font = Enum.Font.GothamBold
-Stop.TextSize = 13
-Stop.Parent = Main
-Instance.new("UICorner", Stop).CornerRadius =
-    UDim.new(0, 8)
-
-Stop.MouseButton1Click:Connect(function()
-    for name in pairs(enabled) do
+actionButton("STOP ALL",.52,
+    Color3.fromRGB(190,50,60),function()
+    for _,name in ipairs(features) do
         enabled[name] = false
+        controls[name]()
     end
-    Status.Text = "● ALL CONTROLS DISABLED"
-    Status.TextColor3 = White
+    updateStatus()
 end)
 
--- Floating open menu
+-- Hide menu
+local Hide = Instance.new("TextButton")
+Hide.Size = UDim2.new(1,-24,0,30)
+Hide.Position = UDim2.fromOffset(12,415)
+Hide.BackgroundColor3 = BLUE
+Hide.Text = "HIDE MENU"
+Hide.TextColor3 = WHITE
+Hide.Font = Enum.Font.GothamBold
+Hide.Parent = Main
+
 local Open = Instance.new("TextButton")
-Open.Size = UDim2.fromOffset(110, 38)
-Open.Position = UDim2.new(0, 15, 0.5, 0)
-Open.BackgroundColor3 = Blue
-Open.Text = "OPEN MENU"
-Open.TextColor3 = White
+Open.Size = UDim2.fromOffset(110,38)
+Open.Position = UDim2.new(0,15,.5,0)
+Open.BackgroundColor3 = BLUE
+Open.Text = "OPEN WIDHA"
+Open.TextColor3 = WHITE
 Open.Font = Enum.Font.GothamBold
-Open.TextSize = 12
 Open.Visible = false
 Open.Parent = GUI
-Instance.new("UICorner", Open).CornerRadius =
-    UDim.new(0, 9)
 
-Close.MouseButton1Click:Connect(function()
+Hide.MouseButton1Click:Connect(function()
     Main.Visible = false
     Open.Visible = true
 end)
@@ -297,40 +254,45 @@ Open.MouseButton1Click:Connect(function()
     Open.Visible = false
 end)
 
--- Drag window
+-- Drag GUI
 local dragging = false
-local dragStart, startPos
+local dragStart
+local startPosition
 
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = Main.Position
+local function beginDrag(input)
+    dragging = true
+    dragStart = input.Position
+    startPosition = Main.Position
+end
+
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        beginDrag(input)
     end
 end)
 
 UIS.InputChanged:Connect(function(input)
     if dragging and (
-        input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch
+        input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseMovement
     ) then
         local delta = input.Position - dragStart
         Main.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
         )
     end
 end)
 
 UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
 
-print("Widha GrowBlox V2 GUI Loaded!")
-print("Created by Widha Gaming")
+print("Widha GrowBlox V3 GUI Loaded!")
+print("Made by Widha Gaming")
