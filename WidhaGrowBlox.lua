@@ -1,13 +1,13 @@
 
 local G = (getgenv and getgenv()) or _G
-for _, key in ipairs({ "__Wildzeen", "__GTFarm" }) do -- __GTFarm = nama versi lama
+for _, key in ipairs({ "__KzoyzOpus", "__GTFarm" }) do -- __GTFarm = nama versi lama
     if G[key] and G[key].Cleanup then pcall(G[key].Cleanup) end
     G[key] = nil
 end
 local Session = {}
-G.__Wildzeen = Session
+G.__KzoyzOpus = Session
 local function alive()
-    return G.__Wildzeen == Session
+    return G.__KzoyzOpus == Session
 end
 
 do
@@ -39,6 +39,19 @@ local SetTileRemote = WorldRemotes:FindFirstChild("SetTile")
 
 local ItemDB = require(Shared.ItemDB)
 local InventoryModule = require(Shared.Inventory)
+-- v1210: metatable inventori tidak lagi sama dengan hasil require(Shared.Inventory).
+-- Jadi dikenali dari bentuknya: punya slots (tabel), capacity (angka), dan method count/add/remove.
+local function isInventoryTable(v)
+    if type(v) ~= "table" then return false end
+    if getmetatable(v) == InventoryModule then
+        return type(rawget(v, "slots")) == "table"
+    end
+    if type(rawget(v, "slots")) ~= "table" or type(rawget(v, "capacity")) ~= "number" then return false end
+    local ok, hasMethods = pcall(function()
+        return type(v.count) == "function" and type(v.add) == "function" and type(v.remove) == "function"
+    end)
+    return ok and hasMethods == true
+end
 local NetOk, Net = pcall(require, Shared.Net)
 
 local GameGui = PlayerGui:WaitForChild("GameGui")
@@ -1370,10 +1383,7 @@ local function findRefs()
                 if ok and isWorld then Refs.World = v end
             end
             if not Refs.Inv then
-                local ok, isInv = pcall(function()
-                    return getmetatable(v) == InventoryModule and type(rawget(v, "slots")) == "table"
-                        and rawget(v, "capacity") ~= nil
-                end)
+                local ok, isInv = pcall(isInventoryTable, v)
                 if ok and isInv then Refs.Inv = v end
             end
             if not Refs.State then
@@ -1882,9 +1892,7 @@ function Anim.quickRefs()
                 local tu = type(u)
                 if tu == "table" then
                     if not Refs.Inv then
-                        local ok, isInv = pcall(function()
-                            return getmetatable(u) == InventoryModule and type(rawget(u, "slots")) == "table"
-                        end)
+                        local ok, isInv = pcall(isInventoryTable, u)
                         if ok and isInv then Refs.Inv = u end
                     end
                     if not Refs.World then
@@ -11315,6 +11323,8 @@ local function reconnect(show)
     pcall(function() UI.RefInfo:SetDesc(refsText()) end)
     updateStatus()
     if show then notify(show, refsText(), 5) end
+    notify("Diagnosa", "Inventori: " .. (Refs.Inv and "ketemu" or "TIDAK") .. " | World: " .. (Refs.World and "ketemu" or "TIDAK")
+        .. " | Pukul: " .. (Refs.Punch and "ketemu" or "TIDAK"), 6)
 end
 
 safe(function()
